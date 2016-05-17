@@ -14,45 +14,41 @@ var changes = {};
 
 //------------------------------------------------------------------------------
 
-function initPlayer(x, y, side) {
+function initPlayer(x, y, r, pointerLength) {
   changes.players = [
     ...G.players,
     {
       x,
       y,
-      w: side,
-      h: side,
-      ponter: 0,
-      pointerLength: 30
+      r,
+      pointerLength
     }
   ];
 }
 
-function drawPlayer({x,y,w,h, pointer, pointerLength}, cursor) {
-  ctx.strokeRect(x,y,w,h);
+function drawPlayer({x, y, r, pointerLength}, cursor) {
+  // ctx.strokeRect(x,y,w,h);
 
-  let pc = {
-    x: x + w / 2,
-    y: y + h / 2
-  };
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, 2 * Math.PI);
+  ctx.stroke();
 
   function getPointer() {
-    let bigPointerX = cursor.x - pc.x;
-    let bigPointerY = cursor.y - pc.y;
+    let bigPointerX = cursor.x - x;
+    let bigPointerY = cursor.y - y;
 
     let bigC = Math.sqrt(Math.pow(bigPointerY, 2) + Math.pow(bigPointerX, 2));
 
     return {
-      x: pc.x + (pointerLength * (bigPointerX / bigC)),
-      y: pc.y + (pointerLength * (bigPointerY / bigC))
+      x: x + (pointerLength * (bigPointerX / bigC)),
+      y: y + (pointerLength * (bigPointerY / bigC))
     }
   }
   let pointerCoords = getPointer();
 
   ctx.beginPath();
-  ctx.moveTo(pc.x, pc.y);
-  ctx.lineTo(pointerCoords.x, pointerCoords.y);
-  ctx.stroke();
+  ctx.arc(pointerCoords.x, pointerCoords.y, 3, 0, 2 * Math.PI);
+  ctx.fill();
 }
 
 function drawPlayers() {
@@ -92,13 +88,13 @@ function clearCanvas() {
 }
 
 function draw() {
-  drawCursor();
+  // drawCursor();
   drawPlayers();
   // ctx.strokeRect(135,135,30,30);
 }
 
 function init() {
-  initPlayer(135,135,30,30);
+  initPlayer(150,150,30,60);
 
   document.addEventListener('mousemove', changeCursor);
 
