@@ -1,9 +1,9 @@
 var canvas = document.querySelector('#c');
 var ctx = canvas.getContext('2d');
-// var players = [];
 
 var G = {
-  players: [],
+  player: {},
+  // newPlayerId: 0,
   cursor: {
     x: -10,
     y: -10
@@ -14,21 +14,19 @@ var changes = {};
 
 //------------------------------------------------------------------------------
 
-function initPlayer(x, y, r, pointerLength) {
-  changes.players = [
-    ...G.players,
-    {
-      x,
-      y,
-      r,
-      pointerLength
-    }
-  ];
+function initPlayer(x = 150, y = 150, r = 10, pointerLength = 30) {
+  let player = {
+    x,
+    y,
+    r,
+    vector: {x: 0, y: 0},
+    pointerLength
+  };
+
+  changes = Object.assign({}, changes, {player});
 }
 
-function drawPlayer({x, y, r, pointerLength}, cursor) {
-  // ctx.strokeRect(x,y,w,h);
-
+function drawPlayer({x, y, r, pointerLength, vector}, cursor) {
   ctx.beginPath();
   ctx.arc(x, y, r, 0, 2 * Math.PI);
   ctx.stroke();
@@ -52,11 +50,11 @@ function drawPlayer({x, y, r, pointerLength}, cursor) {
 }
 
 function drawPlayers() {
-  G.players.forEach(p => drawPlayer(p, G.cursor));
+  drawPlayer(G.player, G.cursor);
 }
 
 //------------------------------------------------------------------------------
-
+// CHANGES
 function changeCursor(e) {
   changes.cursor = {
     x: e.clientX,
@@ -64,8 +62,66 @@ function changeCursor(e) {
   };
 }
 
-function drawCursor() {
-  ctx.strokeRect(G.cursor.x, G.cursor.y, 10, 10);
+function changePlayerVector(vector) {
+  let player = Object.assign({}, changes.player, {vector: Object.assign({}, changes.player.vector, vector)});
+
+  changes = Object.assign({}, changes, player);
+}
+
+function startMovePlayer(e) {
+  switch (e.which) {
+    case 87:
+      changePlayerVector({y: 10});
+    break;
+
+    case 83:
+      changePlayerVector({y: -10});
+    break;
+
+    case 68:
+      changePlayerVector({x: 10});
+    break;
+
+    case 65:
+      changePlayerVector({x: -10});
+  }
+}
+
+function stopMovePlayer(e) {
+  switch (e.which) {
+    case 87:
+      changePlayerVector({y: 0});
+    break;
+
+    case 83:
+      changePlayerVector({y: 0});
+    break;
+
+    case 68:
+      changePlayerVector({x: 0});
+    break;
+
+    case 65:
+      changePlayerVector({x: 0});
+  }
+}
+
+function movePlayer() {
+  let newCoords = {
+    x: changes.player.x + changes.player.vector.x,
+    y: changes.player.y + changes.player.vector.y
+  };
+
+  changes = Object.assign(
+    {},
+    changes,
+    {player:
+      Object.assign(
+        {},
+        changes.player,
+        newCoords
+      )}
+  );
 }
 
 //------------------------------------------------------------------------------
@@ -79,8 +135,9 @@ function render() {
 }
 
 function commitChanges() {
+  movePlayer();
   G = Object.assign({}, G, changes);
-  changes = {};
+  changes = Object.assign({}, G);
 }
 
 function clearCanvas() {
@@ -88,15 +145,15 @@ function clearCanvas() {
 }
 
 function draw() {
-  // drawCursor();
   drawPlayers();
-  // ctx.strokeRect(135,135,30,30);
 }
 
 function init() {
-  initPlayer(150,150,30,60);
+  initPlayer(150,150,10,30);
 
   document.addEventListener('mousemove', changeCursor);
+  document.addEventListener('keydown', startMovePlayer);
+  document.addEventListener('keyup', stopMovePlayer);
 
   requestAnimationFrame(render);
 }
