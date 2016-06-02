@@ -1,7 +1,7 @@
 {
   "name": "one-strike",
   "version": "1.0.0",
-  "description": "A little ToDo app, written with elm and cordova. Just for fun/training/fun training.",
+  "description": "A small game, written on elm, with websockets, for personal training",
   "main": "index.js",
   "scripts": {
     "start": "elm-make OneStrike.elm",
