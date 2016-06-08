@@ -10633,17 +10633,19 @@ var _user$project$OneStrike$movePointer = F2(
 			{ctor: '_Tuple2', _0: newx, _1: newy},
 			someForm);
 	});
-var _user$project$OneStrike$playerView = function (pos) {
+var _user$project$OneStrike$playerView = function (_p6) {
+	var _p7 = _p6;
 	return _evancz$elm_graphics$Collage$group(
 		_elm_lang$core$Native_List.fromArray(
 			[
 				A2(
 				_evancz$elm_graphics$Collage$outlined,
 				_evancz$elm_graphics$Collage$defaultLine,
-				_evancz$elm_graphics$Collage$circle(20)),
+				_evancz$elm_graphics$Collage$circle(
+					_elm_lang$core$Basics$toFloat(_p7._1))),
 				A2(
 				_user$project$OneStrike$movePointer,
-				pos,
+				_p7._0,
 				A2(
 					_evancz$elm_graphics$Collage$filled,
 					_elm_lang$core$Color$red,
@@ -10680,54 +10682,68 @@ var _user$project$OneStrike$view = function (model) {
 								_1: _elm_lang$core$Basics$toFloat(model.player.y)
 							},
 							_user$project$OneStrike$playerView(
-								_user$project$OneStrike$relativeMousePosition(model.mouse)))
+								{
+									ctor: '_Tuple2',
+									_0: _user$project$OneStrike$relativeMousePosition(model.mouse),
+									_1: model.player.r
+								}))
 						])))
 			]));
 };
+var _user$project$OneStrike$getCoordinate = function (_p8) {
+	var _p9 = _p8;
+	var _p11 = _p9._2;
+	var _p10 = _p9._3;
+	var finalC = _p9._0 + _p9._1;
+	return (_elm_lang$core$Native_Utils.cmp(finalC + _p11, _p10) > 0) ? (_p10 - _p11) : finalC;
+};
+var _user$project$OneStrike$getBorderCollision = F2(
+	function (player, _p12) {
+		var _p13 = _p12;
+		var r = player.r;
+		var y = player.y;
+		var newY = function () {
+			var finalY = y + _p13._1;
+			return (_elm_lang$core$Native_Utils.cmp(finalY, 250 - r) > 0) ? (250 - r) : ((_elm_lang$core$Native_Utils.cmp(finalY, -250 + r) < 0) ? (-250 + r) : finalY);
+		}();
+		var x = player.x;
+		var newX = function () {
+			var finalX = x + _p13._0;
+			return (_elm_lang$core$Native_Utils.cmp(finalX, 250 - r) > 0) ? (250 - r) : ((_elm_lang$core$Native_Utils.cmp(finalX, -250 + r) < 0) ? (-250 + r) : finalX);
+		}();
+		return _elm_lang$core$Native_Utils.update(
+			player,
+			{x: newX, y: newY});
+	});
 var _user$project$OneStrike$applyChanges = function (model) {
-	var mOfKD = function (x) {
-		return A2(_elm_lang$core$List$member, x, model.keysDown);
-	};
-	var player = model.player;
+	var speed = model.player.s;
+	var newVector = A3(
+		_elm_lang$core$List$foldl,
+		F2(
+			function (key, _p14) {
+				var _p15 = _p14;
+				var _p18 = _p15._1;
+				var _p17 = _p15._0;
+				var _p16 = key;
+				switch (_p16) {
+					case 87:
+						return {ctor: '_Tuple2', _0: _p17, _1: _p18 + speed};
+					case 83:
+						return {ctor: '_Tuple2', _0: _p17, _1: _p18 - speed};
+					case 68:
+						return {ctor: '_Tuple2', _0: _p17 + speed, _1: _p18};
+					case 65:
+						return {ctor: '_Tuple2', _0: _p17 - speed, _1: _p18};
+					default:
+						return {ctor: '_Tuple2', _0: _p17, _1: _p18};
+				}
+			}),
+		{ctor: '_Tuple2', _0: 0, _1: 0},
+		model.keysDown);
 	return _elm_lang$core$Native_Utils.update(
 		model,
 		{
-			player: _elm_lang$core$Native_Utils.update(
-				player,
-				{
-					y: A3(
-						_elm_lang$core$List$foldl,
-						F2(
-							function (key, y) {
-								var _p6 = key;
-								switch (_p6) {
-									case 87:
-										return y + model.player.s;
-									case 83:
-										return y - model.player.s;
-									default:
-										return y;
-								}
-							}),
-						player.y,
-						model.keysDown),
-					x: A3(
-						_elm_lang$core$List$foldl,
-						F2(
-							function (key, x) {
-								var _p7 = key;
-								switch (_p7) {
-									case 68:
-										return x + model.player.s;
-									case 65:
-										return x - model.player.s;
-									default:
-										return x;
-								}
-							}),
-						player.x,
-						model.keysDown)
-				})
+			player: A2(_user$project$OneStrike$getBorderCollision, model.player, newVector)
 		});
 };
 var _user$project$OneStrike$removeKey = F2(
@@ -10745,14 +10761,14 @@ var _user$project$OneStrike$addKey = F2(
 	});
 var _user$project$OneStrike$update = F2(
 	function (msg, model) {
-		var _p8 = msg;
-		switch (_p8.ctor) {
+		var _p19 = msg;
+		switch (_p19.ctor) {
 			case 'MouseMove':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
 						model,
-						{mouse: _p8._0}),
+						{mouse: _p19._0}),
 					_elm_lang$core$Native_List.fromArray(
 						[]));
 			case 'KeyDown':
@@ -10761,7 +10777,7 @@ var _user$project$OneStrike$update = F2(
 					_elm_lang$core$Native_Utils.update(
 						model,
 						{
-							keysDown: A2(_user$project$OneStrike$addKey, _p8._0, model.keysDown)
+							keysDown: A2(_user$project$OneStrike$addKey, _p19._0, model.keysDown)
 						}),
 					_elm_lang$core$Native_List.fromArray(
 						[]));
@@ -10771,7 +10787,7 @@ var _user$project$OneStrike$update = F2(
 					_elm_lang$core$Native_Utils.update(
 						model,
 						{
-							keysDown: A2(_user$project$OneStrike$removeKey, _p8._0, model.keysDown)
+							keysDown: A2(_user$project$OneStrike$removeKey, _p19._0, model.keysDown)
 						}),
 					_elm_lang$core$Native_List.fromArray(
 						[]));
@@ -10783,9 +10799,9 @@ var _user$project$OneStrike$update = F2(
 						[]));
 		}
 	});
-var _user$project$OneStrike$Player = F3(
-	function (a, b, c) {
-		return {x: a, y: b, s: c};
+var _user$project$OneStrike$Player = F5(
+	function (a, b, c, d, e) {
+		return {x: a, y: b, s: c, r: d, vector: e};
 	});
 var _user$project$OneStrike$Model = F3(
 	function (a, b, c) {
@@ -10795,7 +10811,13 @@ var _user$project$OneStrike$init = {
 	ctor: '_Tuple2',
 	_0: A3(
 		_user$project$OneStrike$Model,
-		A3(_user$project$OneStrike$Player, 0, 0, 5),
+		A5(
+			_user$project$OneStrike$Player,
+			0,
+			0,
+			5,
+			20,
+			{ctor: '_Tuple2', _0: 0, _1: 0}),
 		{x: 0, y: 0},
 		_elm_lang$core$Native_List.fromArray(
 			[])),
@@ -10820,7 +10842,7 @@ var _user$project$OneStrike$subscriptions = function (model) {
 				_elm_lang$mouse$Mouse$moves(_user$project$OneStrike$MouseMove),
 				_elm_lang$keyboard$Keyboard$downs(_user$project$OneStrike$KeyDown),
 				_elm_lang$keyboard$Keyboard$ups(_user$project$OneStrike$KeyUp),
-				A2(_elm_lang$core$Time$every, 20 * _elm_lang$core$Time$millisecond, _user$project$OneStrike$Tick)
+				A2(_elm_lang$core$Time$every, 17 * _elm_lang$core$Time$millisecond, _user$project$OneStrike$Tick)
 			]));
 };
 var _user$project$OneStrike$main = {

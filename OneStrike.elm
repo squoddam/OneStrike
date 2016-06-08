@@ -25,6 +25,8 @@ type alias Player =
   { x : Int
   , y : Int
   , s : Int
+  , r : Int
+  , vector: (Int, Int)
   }
 
 type alias Model =
@@ -34,7 +36,7 @@ type alias Model =
   }
 
 init : (Model, Cmd Msg)
-init = (Model  (Player 0 0 5) {x = 0, y = 0} [], Cmd.none)
+init = (Model  (Player 0 0 5 20 (0, 0)) {x = 0, y = 0} [], Cmd.none)
 
 -- UPDATE
 
@@ -73,42 +75,71 @@ removeKey key keysDown =
 applyChanges : Model -> Model
 applyChanges model =
   let
-    player = model.player
-    mOfKD x = List.member x model.keysDown
+    speed = model.player.s
+    newVector =
+      List.foldl
+        (\key (vx, vy) ->
+          case key of
+            87 ->
+              (vx, vy + speed)
+
+            83 ->
+              (vx, vy - speed)
+
+            68 ->
+              (vx + speed, vy)
+
+            65 ->
+              (vx - speed, vy)
+
+            _->
+              (vx, vy)
+        ) (0, 0) model.keysDown
   in
     { model
     | player =
-      { player
-      | y =
-          List.foldl
-            (\key y ->
-              case key of
-                87 ->
-                  y + model.player.s
-
-                83 ->
-                  y - model.player.s
-
-                _->
-                  y
-            ) player.y model.keysDown
-      , x =
-          List.foldl
-            (\key x ->
-              case key of
-                68 ->
-                  x + model.player.s
-
-                65 ->
-                  x - model.player.s
-
-                _->
-                  x
-            ) player.x model.keysDown
-      }
+      getBorderCollision model.player newVector
     }
 
+getBorderCollision : Player -> (Int, Int) -> Player
+getBorderCollision player (vx, vy) =
+  let
+    x = player.x
+    y = player.y
+    r = player.r
+    newX =
+      let
+        finalX = x + vx
+      in
+        if finalX > 250 - r
+          then 250 - r
+          else
+            if finalX < -250 + r
+              then -250 + r
+              else finalX
+    newY = let
+      finalY = y + vy
+    in
+      if finalY > 250 - r
+        then 250 - r
+        else
+          if finalY < -250 + r
+            then -250 + r
+            else finalY
+  in
+    { player
+    | x = newX
+    , y = newY
+    }
 
+getCoordinate : (number, number, number, number) -> number
+getCoordinate (coor, speed, rad, border) =
+  let
+    finalC = coor + speed
+  in
+    if finalC + rad > border
+      then border - rad
+      else finalC
 
 -- VIEW
 
@@ -126,7 +157,7 @@ view model =
       toFloat  model.player.x,
       toFloat  model.player.y
       )
-      <| playerView <| relativeMousePosition model.mouse
+      <| playerView <| (relativeMousePosition model.mouse, model.player.r)
       ]
   ]
 
@@ -134,18 +165,16 @@ view model =
 -- movePlayer (x,y) player =
 --
 
-playerView : Mouse.Position -> Form
-playerView pos =
+playerView : (Mouse.Position, Int) -> Form
+playerView (pos, r) =
   group
-  [ outlined defaultLine (circle 20)
+  [ outlined defaultLine (circle (toFloat r))
   , movePointer pos <| filled red <| circle 2
   ]
 
 movePointer : Mouse.Position -> Form -> Form
 movePointer {x, y} someForm =
   let
-    -- x = (toFloat x)
-    -- y = (toFloat y)
     hyp = sqrt <| (toFloat x)^2 + (toFloat y)^2
     proportion = 30 / hyp
     newx = (toFloat x) * proportion
@@ -166,5 +195,5 @@ subscriptions model =
   [ Mouse.moves MouseMove
   , Keyboard.downs KeyDown
   , Keyboard.ups KeyUp
-  , Time.every (20 * Time.millisecond) Tick
+  , Time.every (17 * Time.millisecond) Tick
   ]
