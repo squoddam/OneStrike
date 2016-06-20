@@ -6,7 +6,7 @@ import Html.Attributes as Attr
 import Collage exposing (..)
 import Element
 import Time
-import Color exposing (red)
+import Color exposing (red, black)
 import Debug
 
 import Mouse
@@ -19,47 +19,99 @@ main = Html.App.program({
   subscriptions = subscriptions
   })
 
--- MODEL
+--------------------------------------------------------------------------------
+---------------------------------------- MODEL ---------------------------------
+--------------------------------------------------------------------------------
+
+type alias Pointer =
+  { x               : Float
+  , y               : Float
+  , r               : Float
+  , defaultR        : Float
+  , defaultDistance : Int
+  , vector          : {x : Float, y : Float}
+  , independent     : Bool
+  }
 
 type alias Player =
-  { x : Int
-  , y : Int
-  , s : Int
-  , r : Int
-  , vector: (Int, Int)
+  { x       : Int
+  , y       : Int
+  , s       : Int
+  , r       : Int
+  , vector  : (Int, Int)
+  }
+
+type MouseStatus
+  = Up
+  | Down
+
+type alias MouseModel =
+  { pos     : Mouse.Position
+  , status  : MouseStatus
   }
 
 type alias Model =
-  { player : Player
-  , mouse: Mouse.Position
-  , keysDown : List Keyboard.KeyCode
+  { player    : Player
+  , pointer   : Pointer
+  , mouse     : MouseModel
+  , keysDown  : List Keyboard.KeyCode
   }
 
 init : (Model, Cmd Msg)
-init = (Model  (Player 0 0 5 20 (0, 0)) {x = 0, y = 0} [], Cmd.none)
+init = (Model
+          ( Player
+            0
+            0
+            5
+            20
+            (0, 0)
+          )
+          ( Pointer
+            0
+            0
+            2
+            2
+            40
+            { x = 0, y = 0 }
+            False
+          )
+          (MouseModel { x = 0, y = 0 } Up) [], Cmd.none)
 
--- UPDATE
+--------------------------------------------------------------------------------
+---------------------------------------- UPDATE --------------------------------
+--------------------------------------------------------------------------------
 
 type Msg
   = MouseMove Mouse.Position
+  | MouseDown Mouse.Position
+  | MouseUp Mouse.Position
   | KeyDown Keyboard.KeyCode
   | KeyUp Keyboard.KeyCode
   | Tick Time.Time
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
-  case msg of
-    MouseMove pos ->
-      {model | mouse = pos} ! []
+  let
+    modelMouse = model.mouse
+  in
+    case msg of
+      MouseMove pos ->
+          {model | mouse = { modelMouse | pos = pos}} ! []
 
-    KeyDown key ->
-      {model | keysDown = addKey key model.keysDown} ! []
+      MouseDown _ ->
+        {model | mouse = { modelMouse | status = Down}} ! []
 
-    KeyUp key ->
-      {model | keysDown = removeKey key model.keysDown} ! []
+      MouseUp _ ->
+        {model | mouse = { modelMouse | status = Up}} ! []
 
-    Tick _->
-      applyChanges model ! []
+      KeyDown key ->
+        {model | keysDown = addKey key model.keysDown} ! []
+
+      KeyUp key ->
+        {model | keysDown = removeKey key model.keysDown} ! []
+
+      Tick _->
+        applyChanges model ! []
 
 
 addKey : Keyboard.KeyCode -> List Keyboard.KeyCode -> List Keyboard.KeyCode
@@ -75,31 +127,151 @@ removeKey key keysDown =
 applyChanges : Model -> Model
 applyChanges model =
   let
-    speed = model.player.s
-    newVector =
-      List.foldl
-        (\key (vx, vy) ->
-          case key of
-            87 ->
-              (vx, vy + speed)
-
-            83 ->
-              (vx, vy - speed)
-
-            68 ->
-              (vx + speed, vy)
-
-            65 ->
-              (vx - speed, vy)
-
-            _->
-              (vx, vy)
-        ) (0, 0) model.keysDown
+    newPlayer =
+      getBorderCollision model.player (getNewVector model)
+    newModelWithPlayer =
+      { model
+      | player = newPlayer
+      }
+    newPointer =
+      applyChangesToPointer newModelWithPlayer
   in
-    { model
-    | player =
-      getBorderCollision model.player newVector
+    { newModelWithPlayer
+    | pointer = newPointer
     }
+
+-- POINTER
+
+applyChangesToPointer : Model -> Pointer
+applyChangesToPointer model =
+  let
+    player = model.player
+    pointer = model.pointer
+    mx = mouseCoords.x
+    my = mouseCoords.y
+    hyp = sqrt <| (toFloat mx)^2 + (toFloat my)^2
+    vector =
+      getPointerVector model hyp (mx, my)
+
+    ind =
+      (pointer.r /= pointer.defaultR)
+      &&
+      ((vector.x /= 0) || (vector.y /= 0))
+    mouseCoords =
+      mounsePositionByPlayer model.player model.mouse.pos
+    pointerCoords =
+      let
+        proportion = (toFloat pointer.defaultDistance) / hyp
+        newx = ((toFloat mx) * proportion) + (toFloat player.x)
+        newy = ((toFloat my) * proportion) + (toFloat player.y)
+      in
+        if ind
+          then
+            { x = pointer.x + vector.x
+            , y = pointer.y + vector.y
+            }
+          else
+            if hyp == 0
+              then { x = toFloat mx, y = toFloat (my + pointer.defaultDistance)}
+              else { x = newx, y = newy }
+    pointerRadius =
+      case model.mouse.status of
+        Up ->
+          if ind
+            then pointer.r - 0.1
+            else pointer.r
+
+        Down ->
+          if ind
+            then pointer.r - 0.1
+            else pointer.r + 0.1
+  in
+    { pointer
+    | r = pointerRadius
+    , x = pointerCoords.x
+    , y = pointerCoords.y
+    , vector = vector
+    }
+
+getPointerVector : Model -> Float -> (Int, Int) -> {x : Float, y : Float}
+getPointerVector model hyp (mx, my) =
+  let
+   vectorProportion = 10 / hyp
+   pointer = model.pointer
+  in
+    case model.mouse.status of
+      Up ->
+        if pointer.r /= pointer.defaultR
+          then
+          if (pointer.vector.x == 0) && (pointer.vector.y == 0)
+            then
+              { x = (toFloat mx) * vectorProportion
+              , y = (toFloat my) * vectorProportion
+              }
+            else
+              getPointerBorderCollision pointer pointer.vector
+          else { x = 0, y = 0 }
+      Down ->
+        if pointer.r /= pointer.defaultR
+          then getPointerBorderCollision pointer pointer.vector
+          else { x = 0, y = 0 }
+
+getPointerBorderCollision : Pointer -> {x : Float, y : Float} -> {x : Float, y : Float}
+getPointerBorderCollision pointer vector =
+  let
+    {x, y} = pointer
+    newXVector =
+      if ((x + pointer.r) + vector.x > 250) || ((x - pointer.r) + vector.x < -250)
+        then -vector.x
+        else vector.x
+    newYVector =
+      if ((y + pointer.r) + vector.y > 250) || ((y - pointer.r) + vector.y < -250)
+        then -vector.y
+        else vector.y
+  in
+    {x = newXVector, y = newYVector}
+
+mousePositionByCenter : Mouse.Position -> Mouse.Position
+mousePositionByCenter pos =
+  { x = pos.x - 250
+  , y = 250 - pos.y
+  }
+
+mounsePositionByPlayer : Player -> Mouse.Position -> Mouse.Position
+mounsePositionByPlayer player mousePos =
+  let
+    posByCenter = mousePositionByCenter mousePos
+  in
+    { x = posByCenter.x - player.x
+    , y = posByCenter.y - player.y
+    }
+
+-- PLAYER
+
+getNewVector : Model -> (Int, Int)
+getNewVector model =
+  let
+    playerModel = model.player
+    speed = playerModel.s
+  in
+    List.foldl
+      (\key (vx, vy) ->
+        case key of
+          87 ->
+            (vx, vy + speed)
+
+          83 ->
+            (vx, vy - speed)
+
+          68 ->
+            (vx + speed, vy)
+
+          65 ->
+            (vx - speed, vy)
+
+          _->
+            (vx, vy)
+      ) (0, 0) model.keysDown
 
 getBorderCollision : Player -> (Int, Int) -> Player
 getBorderCollision player (vx, vy) =
@@ -132,67 +304,55 @@ getBorderCollision player (vx, vy) =
     , y = newY
     }
 
-getCoordinate : (number, number, number, number) -> number
-getCoordinate (coor, speed, rad, border) =
-  let
-    finalC = coor + speed
-  in
-    if finalC + rad > border
-      then border - rad
-      else finalC
-
--- VIEW
+--------------------------------------------------------------------------------
+-------------------------------------- VIEW ------------------------------------
+--------------------------------------------------------------------------------
 
 view : Model -> Html.Html Msg
 view model =
-  Html.div
-  [
-    Attr.style [("cursor", "none"), ("border", "1px solid black"), ("display", "inline-block")]
-  ]
-  [
-    Element.toHtml
-      <| collage 500 500
-      [
-      move (
-      toFloat  model.player.x,
-      toFloat  model.player.y
-      )
-      <| playerView <| (relativeMousePosition model.mouse, model.player.r)
-      ]
-  ]
-
--- movePlayer : List Int -> Form -> Form
--- movePlayer (x,y) player =
---
-
-playerView : (Mouse.Position, Int) -> Form
-playerView (pos, r) =
-  group
-  [ outlined defaultLine (circle (toFloat r))
-  , movePointer pos <| filled red <| circle 2
-  ]
-
-movePointer : Mouse.Position -> Form -> Form
-movePointer {x, y} someForm =
   let
-    hyp = sqrt <| (toFloat x)^2 + (toFloat y)^2
-    proportion = 30 / hyp
-    newx = (toFloat x) * proportion
-    newy = (toFloat y) * proportion
+    relMPos = mousePositionByCenter model.mouse.pos
   in
-    move (newx, newy) someForm
+    Html.div
+    [
+      Attr.style [("cursor", "none"), ("border", "1px solid black"), ("display", "inline-block")]
+    ]
+    [
+      Element.toHtml
+        <| collage 500 500
+          [ playerView model.player
+          , pointerView model.pointer
+          , move  ( toFloat relMPos.x
+                  , toFloat relMPos.y
+                  )
+            <| filled black
+            <| circle 2
+          , toForm
+            <| Element.show ("x: " ++ (toString model.pointer.r))
+          ]
+    ]
 
-relativeMousePosition : Mouse.Position -> Mouse.Position
-relativeMousePosition {x, y} =
-  { x = x - 250
-  , y = 250 - y
-  }
--- SUBSCRIPTIONS
+playerView : Player -> Form
+playerView player =
+  move  ( toFloat  player.x
+        , toFloat  player.y
+        )
+  <| outlined defaultLine (circle (toFloat player.r))
+
+pointerView : Pointer -> Form
+pointerView pointer =
+  move (pointer.x, pointer.y)
+  <| filled red (circle pointer.r)
+--------------------------------------------------------------------------------
+--------------------------- SUBSCRIPTIONS --------------------------------------
+--------------------------------------------------------------------------------
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
   Sub.batch
   [ Mouse.moves MouseMove
+  , Mouse.downs MouseDown
+  , Mouse.ups MouseUp
   , Keyboard.downs KeyDown
   , Keyboard.ups KeyUp
   , Time.every (17 * Time.millisecond) Tick
