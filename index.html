@@ -10610,30 +10610,71 @@ var _evancz$elm_graphics$Collage$ngon = F2(
 				f,
 				_elm_lang$core$Native_List.range(0, m - 1)));
 	});
-var _user$project$OneStrike$pointerView = function (pointer) {
-	return A2(
-		_evancz$elm_graphics$Collage$move,
-		{ctor: '_Tuple2', _0: pointer.x, _1: pointer.y},
-		A2(
-			_evancz$elm_graphics$Collage$filled,
-			_elm_lang$core$Color$red,
-			_evancz$elm_graphics$Collage$circle(pointer.r)));
+var _user$project$Types$Pointer = F7(
+	function (a, b, c, d, e, f, g) {
+		return {x: a, y: b, r: c, defaultR: d, defaultDistance: e, vector: f, independent: g};
+	});
+var _user$project$Types$Player = F5(
+	function (a, b, c, d, e) {
+		return {x: a, y: b, s: c, r: d, vector: e};
+	});
+var _user$project$Types$MouseModel = F2(
+	function (a, b) {
+		return {pos: a, status: b};
+	});
+var _user$project$Types$Model = F4(
+	function (a, b, c, d) {
+		return {player: a, pointer: b, mouse: c, keysDown: d};
+	});
+var _user$project$Types$Down = {ctor: 'Down'};
+var _user$project$Types$Up = {ctor: 'Up'};
+var _user$project$Types$Tick = function (a) {
+	return {ctor: 'Tick', _0: a};
 };
-var _user$project$OneStrike$playerView = function (player) {
-	return A2(
-		_evancz$elm_graphics$Collage$move,
-		{
-			ctor: '_Tuple2',
-			_0: _elm_lang$core$Basics$toFloat(player.x),
-			_1: _elm_lang$core$Basics$toFloat(player.y)
-		},
-		A2(
-			_evancz$elm_graphics$Collage$outlined,
-			_evancz$elm_graphics$Collage$defaultLine,
-			_evancz$elm_graphics$Collage$circle(
-				_elm_lang$core$Basics$toFloat(player.r))));
+var _user$project$Types$KeyUp = function (a) {
+	return {ctor: 'KeyUp', _0: a};
 };
-var _user$project$OneStrike$getBorderCollision = F2(
+var _user$project$Types$KeyDown = function (a) {
+	return {ctor: 'KeyDown', _0: a};
+};
+var _user$project$Types$MouseUp = function (a) {
+	return {ctor: 'MouseUp', _0: a};
+};
+var _user$project$Types$MouseDown = function (a) {
+	return {ctor: 'MouseDown', _0: a};
+};
+var _user$project$Types$MouseMove = function (a) {
+	return {ctor: 'MouseMove', _0: a};
+};
+var _user$project$Model$init = {
+	ctor: '_Tuple2',
+	_0: A4(
+		_user$project$Types$Model,
+		A5(
+			_user$project$Types$Player,
+			0,
+			0,
+			5,
+			20,
+			{ctor: '_Tuple2', _0: 0, _1: 0}),
+		A7(
+			_user$project$Types$Pointer,
+			0,
+			0,
+			2,
+			2,
+			40,
+			{x: 0, y: 0},
+			false),
+		A2(
+			_user$project$Types$MouseModel,
+			{x: 0, y: 0},
+			_user$project$Types$Up),
+		_elm_lang$core$Native_List.fromArray(
+			[])),
+	_1: _elm_lang$core$Platform_Cmd$none
+};
+var _user$project$Utils$getBorderCollision = F2(
 	function (player, _p0) {
 		var _p1 = _p0;
 		var r = player.r;
@@ -10651,7 +10692,7 @@ var _user$project$OneStrike$getBorderCollision = F2(
 			player,
 			{x: newX, y: newY});
 	});
-var _user$project$OneStrike$getNewVector = function (model) {
+var _user$project$Utils$getNewVector = function (model) {
 	var playerModel = model.player;
 	var speed = playerModel.s;
 	return A3(
@@ -10678,60 +10719,15 @@ var _user$project$OneStrike$getNewVector = function (model) {
 		{ctor: '_Tuple2', _0: 0, _1: 0},
 		model.keysDown);
 };
-var _user$project$OneStrike$mousePositionByCenter = function (pos) {
+var _user$project$Utils$mousePositionByCenter = function (pos) {
 	return {x: pos.x - 250, y: 250 - pos.y};
 };
-var _user$project$OneStrike$mounsePositionByPlayer = F2(
+var _user$project$Utils$mounsePositionByPlayer = F2(
 	function (player, mousePos) {
-		var posByCenter = _user$project$OneStrike$mousePositionByCenter(mousePos);
+		var posByCenter = _user$project$Utils$mousePositionByCenter(mousePos);
 		return {x: posByCenter.x - player.x, y: posByCenter.y - player.y};
 	});
-var _user$project$OneStrike$view = function (model) {
-	var relMPos = _user$project$OneStrike$mousePositionByCenter(model.mouse.pos);
-	return A2(
-		_elm_lang$html$Html$div,
-		_elm_lang$core$Native_List.fromArray(
-			[
-				_elm_lang$html$Html_Attributes$style(
-				_elm_lang$core$Native_List.fromArray(
-					[
-						{ctor: '_Tuple2', _0: 'cursor', _1: 'none'},
-						{ctor: '_Tuple2', _0: 'border', _1: '1px solid black'},
-						{ctor: '_Tuple2', _0: 'display', _1: 'inline-block'}
-					]))
-			]),
-		_elm_lang$core$Native_List.fromArray(
-			[
-				_evancz$elm_graphics$Element$toHtml(
-				A3(
-					_evancz$elm_graphics$Collage$collage,
-					500,
-					500,
-					_elm_lang$core$Native_List.fromArray(
-						[
-							_user$project$OneStrike$playerView(model.player),
-							_user$project$OneStrike$pointerView(model.pointer),
-							A2(
-							_evancz$elm_graphics$Collage$move,
-							{
-								ctor: '_Tuple2',
-								_0: _elm_lang$core$Basics$toFloat(relMPos.x),
-								_1: _elm_lang$core$Basics$toFloat(relMPos.y)
-							},
-							A2(
-								_evancz$elm_graphics$Collage$filled,
-								_elm_lang$core$Color$black,
-								_evancz$elm_graphics$Collage$circle(2))),
-							_evancz$elm_graphics$Collage$toForm(
-							_evancz$elm_graphics$Element$show(
-								A2(
-									_elm_lang$core$Basics_ops['++'],
-									'x: ',
-									_elm_lang$core$Basics$toString(model.pointer.r))))
-						])))
-			]));
-};
-var _user$project$OneStrike$getPointerBorderCollision = F2(
+var _user$project$Utils$getPointerBorderCollision = F2(
 	function (pointer, vector) {
 		var _p7 = pointer;
 		var x = _p7.x;
@@ -10740,7 +10736,7 @@ var _user$project$OneStrike$getPointerBorderCollision = F2(
 		var newYVector = ((_elm_lang$core$Native_Utils.cmp((y + pointer.r) + vector.y, 250) > 0) || (_elm_lang$core$Native_Utils.cmp((y - pointer.r) + vector.y, -250) < 0)) ? (0 - vector.y) : vector.y;
 		return {x: newXVector, y: newYVector};
 	});
-var _user$project$OneStrike$getPointerVector = F3(
+var _user$project$Utils$getPointerVector = F3(
 	function (model, hyp, _p8) {
 		var _p9 = _p8;
 		var pointer = model.pointer;
@@ -10750,13 +10746,13 @@ var _user$project$OneStrike$getPointerVector = F3(
 			return (!_elm_lang$core$Native_Utils.eq(pointer.r, pointer.defaultR)) ? ((_elm_lang$core$Native_Utils.eq(pointer.vector.x, 0) && _elm_lang$core$Native_Utils.eq(pointer.vector.y, 0)) ? {
 				x: _elm_lang$core$Basics$toFloat(_p9._0) * vectorProportion,
 				y: _elm_lang$core$Basics$toFloat(_p9._1) * vectorProportion
-			} : A2(_user$project$OneStrike$getPointerBorderCollision, pointer, pointer.vector)) : {x: 0, y: 0};
+			} : A2(_user$project$Utils$getPointerBorderCollision, pointer, pointer.vector)) : {x: 0, y: 0};
 		} else {
-			return (!_elm_lang$core$Native_Utils.eq(pointer.r, pointer.defaultR)) ? A2(_user$project$OneStrike$getPointerBorderCollision, pointer, pointer.vector) : {x: 0, y: 0};
+			return (!_elm_lang$core$Native_Utils.eq(pointer.r, pointer.defaultR)) ? A2(_user$project$Utils$getPointerBorderCollision, pointer, pointer.vector) : {x: 0, y: 0};
 		}
 	});
-var _user$project$OneStrike$applyChangesToPointer = function (model) {
-	var mouseCoords = A2(_user$project$OneStrike$mounsePositionByPlayer, model.player, model.mouse.pos);
+var _user$project$Utils$applyChangesToPointer = function (model) {
+	var mouseCoords = A2(_user$project$Utils$mounsePositionByPlayer, model.player, model.mouse.pos);
 	var my = mouseCoords.y;
 	var mx = mouseCoords.x;
 	var hyp = _elm_lang$core$Basics$sqrt(
@@ -10766,7 +10762,7 @@ var _user$project$OneStrike$applyChangesToPointer = function (model) {
 			_elm_lang$core$Basics$toFloat(my),
 			2));
 	var vector = A3(
-		_user$project$OneStrike$getPointerVector,
+		_user$project$Utils$getPointerVector,
 		model,
 		hyp,
 		{ctor: '_Tuple2', _0: mx, _1: my});
@@ -10794,20 +10790,20 @@ var _user$project$OneStrike$applyChangesToPointer = function (model) {
 		pointer,
 		{r: pointerRadius, x: pointerCoords.x, y: pointerCoords.y, vector: vector});
 };
-var _user$project$OneStrike$applyChanges = function (model) {
+var _user$project$Utils$applyChanges = function (model) {
 	var newPlayer = A2(
-		_user$project$OneStrike$getBorderCollision,
+		_user$project$Utils$getBorderCollision,
 		model.player,
-		_user$project$OneStrike$getNewVector(model));
+		_user$project$Utils$getNewVector(model));
 	var newModelWithPlayer = _elm_lang$core$Native_Utils.update(
 		model,
 		{player: newPlayer});
-	var newPointer = _user$project$OneStrike$applyChangesToPointer(newModelWithPlayer);
+	var newPointer = _user$project$Utils$applyChangesToPointer(newModelWithPlayer);
 	return _elm_lang$core$Native_Utils.update(
 		newModelWithPlayer,
 		{pointer: newPointer});
 };
-var _user$project$OneStrike$removeKey = F2(
+var _user$project$Utils$removeKey = F2(
 	function (key, keysDown) {
 		return A2(
 			_elm_lang$core$List$filter,
@@ -10816,61 +10812,77 @@ var _user$project$OneStrike$removeKey = F2(
 			},
 			keysDown);
 	});
-var _user$project$OneStrike$addKey = F2(
+var _user$project$Utils$addKey = F2(
 	function (key, keysDown) {
 		return A2(_elm_lang$core$List$member, key, keysDown) ? keysDown : A2(_elm_lang$core$List_ops['::'], key, keysDown);
 	});
-var _user$project$OneStrike$Pointer = F7(
-	function (a, b, c, d, e, f, g) {
-		return {x: a, y: b, r: c, defaultR: d, defaultDistance: e, vector: f, independent: g};
-	});
-var _user$project$OneStrike$Player = F5(
-	function (a, b, c, d, e) {
-		return {x: a, y: b, s: c, r: d, vector: e};
-	});
-var _user$project$OneStrike$MouseModel = F2(
-	function (a, b) {
-		return {pos: a, status: b};
-	});
-var _user$project$OneStrike$Model = F4(
-	function (a, b, c, d) {
-		return {player: a, pointer: b, mouse: c, keysDown: d};
-	});
-var _user$project$OneStrike$Down = {ctor: 'Down'};
-var _user$project$OneStrike$Up = {ctor: 'Up'};
-var _user$project$OneStrike$init = {
-	ctor: '_Tuple2',
-	_0: A4(
-		_user$project$OneStrike$Model,
-		A5(
-			_user$project$OneStrike$Player,
-			0,
-			0,
-			5,
-			20,
-			{ctor: '_Tuple2', _0: 0, _1: 0}),
-		A7(
-			_user$project$OneStrike$Pointer,
-			0,
-			0,
-			2,
-			2,
-			40,
-			{x: 0, y: 0},
-			false),
+var _user$project$View$pointerView = function (pointer) {
+	return A2(
+		_evancz$elm_graphics$Collage$move,
+		{ctor: '_Tuple2', _0: pointer.x, _1: pointer.y},
 		A2(
-			_user$project$OneStrike$MouseModel,
-			{x: 0, y: 0},
-			_user$project$OneStrike$Up),
-		_elm_lang$core$Native_List.fromArray(
-			[])),
-	_1: _elm_lang$core$Platform_Cmd$none
+			_evancz$elm_graphics$Collage$filled,
+			_elm_lang$core$Color$red,
+			_evancz$elm_graphics$Collage$circle(pointer.r)));
 };
-var _user$project$OneStrike$update = F2(
+var _user$project$View$playerView = function (player) {
+	return A2(
+		_evancz$elm_graphics$Collage$move,
+		{
+			ctor: '_Tuple2',
+			_0: _elm_lang$core$Basics$toFloat(player.x),
+			_1: _elm_lang$core$Basics$toFloat(player.y)
+		},
+		A2(
+			_evancz$elm_graphics$Collage$outlined,
+			_evancz$elm_graphics$Collage$defaultLine,
+			_evancz$elm_graphics$Collage$circle(
+				_elm_lang$core$Basics$toFloat(player.r))));
+};
+var _user$project$View$view = function (model) {
+	var relMPos = _user$project$Utils$mousePositionByCenter(model.mouse.pos);
+	return A2(
+		_elm_lang$html$Html$div,
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$html$Html_Attributes$style(
+				_elm_lang$core$Native_List.fromArray(
+					[
+						{ctor: '_Tuple2', _0: 'cursor', _1: 'none'},
+						{ctor: '_Tuple2', _0: 'border', _1: '1px solid black'},
+						{ctor: '_Tuple2', _0: 'display', _1: 'inline-block'}
+					]))
+			]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_evancz$elm_graphics$Element$toHtml(
+				A3(
+					_evancz$elm_graphics$Collage$collage,
+					500,
+					500,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_user$project$View$playerView(model.player),
+							_user$project$View$pointerView(model.pointer),
+							A2(
+							_evancz$elm_graphics$Collage$move,
+							{
+								ctor: '_Tuple2',
+								_0: _elm_lang$core$Basics$toFloat(relMPos.x),
+								_1: _elm_lang$core$Basics$toFloat(relMPos.y)
+							},
+							A2(
+								_evancz$elm_graphics$Collage$filled,
+								_elm_lang$core$Color$black,
+								_evancz$elm_graphics$Collage$circle(2)))
+						])))
+			]));
+};
+var _user$project$Update$update = F2(
 	function (msg, model) {
 		var modelMouse = model.mouse;
-		var _p12 = msg;
-		switch (_p12.ctor) {
+		var _p0 = msg;
+		switch (_p0.ctor) {
 			case 'MouseMove':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
@@ -10879,7 +10891,7 @@ var _user$project$OneStrike$update = F2(
 						{
 							mouse: _elm_lang$core$Native_Utils.update(
 								modelMouse,
-								{pos: _p12._0})
+								{pos: _p0._0})
 						}),
 					_elm_lang$core$Native_List.fromArray(
 						[]));
@@ -10891,7 +10903,7 @@ var _user$project$OneStrike$update = F2(
 						{
 							mouse: _elm_lang$core$Native_Utils.update(
 								modelMouse,
-								{status: _user$project$OneStrike$Down})
+								{status: _user$project$Types$Down})
 						}),
 					_elm_lang$core$Native_List.fromArray(
 						[]));
@@ -10903,7 +10915,7 @@ var _user$project$OneStrike$update = F2(
 						{
 							mouse: _elm_lang$core$Native_Utils.update(
 								modelMouse,
-								{status: _user$project$OneStrike$Up})
+								{status: _user$project$Types$Up})
 						}),
 					_elm_lang$core$Native_List.fromArray(
 						[]));
@@ -10913,7 +10925,7 @@ var _user$project$OneStrike$update = F2(
 					_elm_lang$core$Native_Utils.update(
 						model,
 						{
-							keysDown: A2(_user$project$OneStrike$addKey, _p12._0, model.keysDown)
+							keysDown: A2(_user$project$Utils$addKey, _p0._0, model.keysDown)
 						}),
 					_elm_lang$core$Native_List.fromArray(
 						[]));
@@ -10923,51 +10935,33 @@ var _user$project$OneStrike$update = F2(
 					_elm_lang$core$Native_Utils.update(
 						model,
 						{
-							keysDown: A2(_user$project$OneStrike$removeKey, _p12._0, model.keysDown)
+							keysDown: A2(_user$project$Utils$removeKey, _p0._0, model.keysDown)
 						}),
 					_elm_lang$core$Native_List.fromArray(
 						[]));
 			default:
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
-					_user$project$OneStrike$applyChanges(model),
+					_user$project$Utils$applyChanges(model),
 					_elm_lang$core$Native_List.fromArray(
 						[]));
 		}
 	});
-var _user$project$OneStrike$Tick = function (a) {
-	return {ctor: 'Tick', _0: a};
-};
-var _user$project$OneStrike$KeyUp = function (a) {
-	return {ctor: 'KeyUp', _0: a};
-};
-var _user$project$OneStrike$KeyDown = function (a) {
-	return {ctor: 'KeyDown', _0: a};
-};
-var _user$project$OneStrike$MouseUp = function (a) {
-	return {ctor: 'MouseUp', _0: a};
-};
-var _user$project$OneStrike$MouseDown = function (a) {
-	return {ctor: 'MouseDown', _0: a};
-};
-var _user$project$OneStrike$MouseMove = function (a) {
-	return {ctor: 'MouseMove', _0: a};
-};
-var _user$project$OneStrike$subscriptions = function (model) {
+var _user$project$Subscriptions$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$batch(
 		_elm_lang$core$Native_List.fromArray(
 			[
-				_elm_lang$mouse$Mouse$moves(_user$project$OneStrike$MouseMove),
-				_elm_lang$mouse$Mouse$downs(_user$project$OneStrike$MouseDown),
-				_elm_lang$mouse$Mouse$ups(_user$project$OneStrike$MouseUp),
-				_elm_lang$keyboard$Keyboard$downs(_user$project$OneStrike$KeyDown),
-				_elm_lang$keyboard$Keyboard$ups(_user$project$OneStrike$KeyUp),
-				A2(_elm_lang$core$Time$every, 17 * _elm_lang$core$Time$millisecond, _user$project$OneStrike$Tick)
+				_elm_lang$mouse$Mouse$moves(_user$project$Types$MouseMove),
+				_elm_lang$mouse$Mouse$downs(_user$project$Types$MouseDown),
+				_elm_lang$mouse$Mouse$ups(_user$project$Types$MouseUp),
+				_elm_lang$keyboard$Keyboard$downs(_user$project$Types$KeyDown),
+				_elm_lang$keyboard$Keyboard$ups(_user$project$Types$KeyUp),
+				A2(_elm_lang$core$Time$every, 17 * _elm_lang$core$Time$millisecond, _user$project$Types$Tick)
 			]));
 };
 var _user$project$OneStrike$main = {
 	main: _elm_lang$html$Html_App$program(
-		{view: _user$project$OneStrike$view, init: _user$project$OneStrike$init, update: _user$project$OneStrike$update, subscriptions: _user$project$OneStrike$subscriptions})
+		{view: _user$project$View$view, init: _user$project$Model$init, update: _user$project$Update$update, subscriptions: _user$project$Subscriptions$subscriptions})
 };
 var Elm = {};
 Elm['OneStrike'] = Elm['OneStrike'] || {};
