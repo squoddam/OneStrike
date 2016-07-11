@@ -2,7 +2,7 @@ module View exposing (view)
 
 import Html exposing (Html, div)
 import Html.Attributes exposing (style)
-import Collage exposing (Form, collage, move, filled, outlined, defaultLine, circle)
+import Collage exposing (Form, collage, move, filled, outlined, defaultLine, circle, toForm)
 import Element exposing (toHtml, show)
 import Color exposing (red, black)
 
@@ -23,15 +23,15 @@ view model =
     [
       Element.toHtml
         <| collage 500 500
-          [ playerView model.player
+          [ toForm
+            <| Element.show ("score: " ++ (toString model.score))
+          , playerView model.player
           , pointerView model.pointer
           , move  ( toFloat relMPos.x
                   , toFloat relMPos.y
                   )
             <| filled black
             <| circle 2
-          -- , toForm
-          --   <| Element.show ("x: " ++ (toString model.pointer.r))
           ]
     ]
 

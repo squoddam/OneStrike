@@ -32,7 +32,8 @@ type alias MouseModel =
   }
 
 type alias Model =
-  { player    : Player
+  { score     : Int
+  , player    : Player
   , pointer   : Pointer
   , mouse     : MouseModel
   , keysDown  : List Keyboard.KeyCode

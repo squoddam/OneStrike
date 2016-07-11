@@ -10622,9 +10622,9 @@ var _user$project$Types$MouseModel = F2(
 	function (a, b) {
 		return {pos: a, status: b};
 	});
-var _user$project$Types$Model = F4(
-	function (a, b, c, d) {
-		return {player: a, pointer: b, mouse: c, keysDown: d};
+var _user$project$Types$Model = F5(
+	function (a, b, c, d, e) {
+		return {score: a, player: b, pointer: c, mouse: d, keysDown: e};
 	});
 var _user$project$Types$Down = {ctor: 'Down'};
 var _user$project$Types$Up = {ctor: 'Up'};
@@ -10646,26 +10646,29 @@ var _user$project$Types$MouseDown = function (a) {
 var _user$project$Types$MouseMove = function (a) {
 	return {ctor: 'MouseMove', _0: a};
 };
+var _user$project$Model$pointerInit = A7(
+	_user$project$Types$Pointer,
+	0,
+	0,
+	2,
+	2,
+	40,
+	{x: 0, y: 0},
+	false);
+var _user$project$Model$playerInit = A5(
+	_user$project$Types$Player,
+	0,
+	0,
+	5,
+	20,
+	{ctor: '_Tuple2', _0: 0, _1: 0});
 var _user$project$Model$init = {
 	ctor: '_Tuple2',
-	_0: A4(
+	_0: A5(
 		_user$project$Types$Model,
-		A5(
-			_user$project$Types$Player,
-			0,
-			0,
-			5,
-			20,
-			{ctor: '_Tuple2', _0: 0, _1: 0}),
-		A7(
-			_user$project$Types$Pointer,
-			0,
-			0,
-			2,
-			2,
-			40,
-			{x: 0, y: 0},
-			false),
+		0,
+		_user$project$Model$playerInit,
+		_user$project$Model$pointerInit,
 		A2(
 			_user$project$Types$MouseModel,
 			{x: 0, y: 0},
@@ -10736,56 +10739,81 @@ var _user$project$Utils$getPointerBorderCollision = F2(
 		var newYVector = ((_elm_lang$core$Native_Utils.cmp((y + pointer.r) + vector.y, 250) > 0) || (_elm_lang$core$Native_Utils.cmp((y - pointer.r) + vector.y, -250) < 0)) ? (0 - vector.y) : vector.y;
 		return {x: newXVector, y: newYVector};
 	});
-var _user$project$Utils$getPointerVector = F3(
-	function (model, hyp, _p8) {
-		var _p9 = _p8;
+var _user$project$Utils$getHypothenuse = function (_p8) {
+	var _p9 = _p8;
+	return _elm_lang$core$Basics$sqrt(
+		Math.pow(
+			_elm_lang$core$Basics$toFloat(_p9._0),
+			2) + Math.pow(
+			_elm_lang$core$Basics$toFloat(_p9._1),
+			2));
+};
+var _user$project$Utils$getPointerVector = function (model) {
+	var pointer = model.pointer;
+	var _p10 = A2(_user$project$Utils$mounsePositionByPlayer, model.player, model.mouse.pos);
+	var x = _p10.x;
+	var y = _p10.y;
+	var vectorProportion = 10 / _user$project$Utils$getHypothenuse(
+		{ctor: '_Tuple2', _0: x, _1: y});
+	var _p11 = model.mouse.status;
+	if (_p11.ctor === 'Up') {
+		return (!_elm_lang$core$Native_Utils.eq(pointer.r, pointer.defaultR)) ? ((_elm_lang$core$Native_Utils.eq(pointer.vector.x, 0) && _elm_lang$core$Native_Utils.eq(pointer.vector.y, 0)) ? {
+			x: _elm_lang$core$Basics$toFloat(x) * vectorProportion,
+			y: _elm_lang$core$Basics$toFloat(y) * vectorProportion
+		} : A2(_user$project$Utils$getPointerBorderCollision, pointer, pointer.vector)) : {x: 0, y: 0};
+	} else {
+		return (!_elm_lang$core$Native_Utils.eq(pointer.r, pointer.defaultR)) ? A2(_user$project$Utils$getPointerBorderCollision, pointer, pointer.vector) : {x: 0, y: 0};
+	}
+};
+var _user$project$Utils$isPlayerDead = function (model) {
+	var pointer = model.pointer;
+	var player = model.player;
+	var relX = _elm_lang$core$Basics$round(pointer.x) - player.x;
+	var relY = _elm_lang$core$Basics$round(pointer.y) - player.y;
+	var hyp = _user$project$Utils$getHypothenuse(
+		{ctor: '_Tuple2', _0: relX, _1: relY});
+	var rSum = _elm_lang$core$Basics$toFloat(player.r) + pointer.r;
+	return _elm_lang$core$Native_Utils.cmp(hyp, rSum) < 0;
+};
+var _user$project$Utils$getCorrectedModel = function (model) {
+	var playerDeath = _user$project$Utils$isPlayerDead(model);
+	return playerDeath ? _elm_lang$core$Native_Utils.update(
+		model,
+		{score: model.score - 1, player: _user$project$Model$playerInit}) : model;
+};
+var _user$project$Utils$getPointerCoords = F3(
+	function (model, vector, isIndependent) {
+		var _p12 = A2(_user$project$Utils$mounsePositionByPlayer, model.player, model.mouse.pos);
+		var x = _p12.x;
+		var y = _p12.y;
+		var hyp = _user$project$Utils$getHypothenuse(
+			{ctor: '_Tuple2', _0: x, _1: y});
+		var player = model.player;
 		var pointer = model.pointer;
-		var vectorProportion = 10 / hyp;
-		var _p10 = model.mouse.status;
-		if (_p10.ctor === 'Up') {
-			return (!_elm_lang$core$Native_Utils.eq(pointer.r, pointer.defaultR)) ? ((_elm_lang$core$Native_Utils.eq(pointer.vector.x, 0) && _elm_lang$core$Native_Utils.eq(pointer.vector.y, 0)) ? {
-				x: _elm_lang$core$Basics$toFloat(_p9._0) * vectorProportion,
-				y: _elm_lang$core$Basics$toFloat(_p9._1) * vectorProportion
-			} : A2(_user$project$Utils$getPointerBorderCollision, pointer, pointer.vector)) : {x: 0, y: 0};
+		var proportion = _elm_lang$core$Basics$toFloat(pointer.defaultDistance) / hyp;
+		var newx = (_elm_lang$core$Basics$toFloat(x) * proportion) + _elm_lang$core$Basics$toFloat(player.x);
+		var newy = (_elm_lang$core$Basics$toFloat(y) * proportion) + _elm_lang$core$Basics$toFloat(player.y);
+		return isIndependent ? {x: pointer.x + vector.x, y: pointer.y + vector.y} : (_elm_lang$core$Native_Utils.eq(hyp, 0) ? {
+			x: _elm_lang$core$Basics$toFloat(x),
+			y: _elm_lang$core$Basics$toFloat(y + pointer.defaultDistance)
+		} : {x: newx, y: newy});
+	});
+var _user$project$Utils$getPointerRadius = F3(
+	function (r, status, isIndepenedent) {
+		var _p13 = status;
+		if (_p13.ctor === 'Up') {
+			return isIndepenedent ? (r - 0.1) : r;
 		} else {
-			return (!_elm_lang$core$Native_Utils.eq(pointer.r, pointer.defaultR)) ? A2(_user$project$Utils$getPointerBorderCollision, pointer, pointer.vector) : {x: 0, y: 0};
+			return isIndepenedent ? (r - 0.1) : (r + 0.1);
 		}
 	});
 var _user$project$Utils$applyChangesToPointer = function (model) {
 	var mouseCoords = A2(_user$project$Utils$mounsePositionByPlayer, model.player, model.mouse.pos);
-	var my = mouseCoords.y;
-	var mx = mouseCoords.x;
-	var hyp = _elm_lang$core$Basics$sqrt(
-		Math.pow(
-			_elm_lang$core$Basics$toFloat(mx),
-			2) + Math.pow(
-			_elm_lang$core$Basics$toFloat(my),
-			2));
-	var vector = A3(
-		_user$project$Utils$getPointerVector,
-		model,
-		hyp,
-		{ctor: '_Tuple2', _0: mx, _1: my});
+	var vector = _user$project$Utils$getPointerVector(model);
 	var pointer = model.pointer;
 	var ind = (!_elm_lang$core$Native_Utils.eq(pointer.r, pointer.defaultR)) && ((!_elm_lang$core$Native_Utils.eq(vector.x, 0)) || (!_elm_lang$core$Native_Utils.eq(vector.y, 0)));
-	var pointerRadius = function () {
-		var _p11 = model.mouse.status;
-		if (_p11.ctor === 'Up') {
-			return ind ? (pointer.r - 0.1) : pointer.r;
-		} else {
-			return ind ? (pointer.r - 0.1) : (pointer.r + 0.1);
-		}
-	}();
-	var player = model.player;
-	var pointerCoords = function () {
-		var proportion = _elm_lang$core$Basics$toFloat(pointer.defaultDistance) / hyp;
-		var newx = (_elm_lang$core$Basics$toFloat(mx) * proportion) + _elm_lang$core$Basics$toFloat(player.x);
-		var newy = (_elm_lang$core$Basics$toFloat(my) * proportion) + _elm_lang$core$Basics$toFloat(player.y);
-		return ind ? {x: pointer.x + vector.x, y: pointer.y + vector.y} : (_elm_lang$core$Native_Utils.eq(hyp, 0) ? {
-			x: _elm_lang$core$Basics$toFloat(mx),
-			y: _elm_lang$core$Basics$toFloat(my + pointer.defaultDistance)
-		} : {x: newx, y: newy});
-	}();
+	var pointerCoords = A3(_user$project$Utils$getPointerCoords, model, vector, ind);
+	var pointerRadius = A3(_user$project$Utils$getPointerRadius, pointer.r, model.mouse.status, ind);
 	return _elm_lang$core$Native_Utils.update(
 		pointer,
 		{r: pointerRadius, x: pointerCoords.x, y: pointerCoords.y, vector: vector});
@@ -10799,9 +10827,10 @@ var _user$project$Utils$applyChanges = function (model) {
 		model,
 		{player: newPlayer});
 	var newPointer = _user$project$Utils$applyChangesToPointer(newModelWithPlayer);
-	return _elm_lang$core$Native_Utils.update(
+	var newModelWithoutCorrections = _elm_lang$core$Native_Utils.update(
 		newModelWithPlayer,
 		{pointer: newPointer});
+	return _user$project$Utils$getCorrectedModel(newModelWithoutCorrections);
 };
 var _user$project$Utils$removeKey = F2(
 	function (key, keysDown) {
@@ -10862,6 +10891,12 @@ var _user$project$View$view = function (model) {
 					500,
 					_elm_lang$core$Native_List.fromArray(
 						[
+							_evancz$elm_graphics$Collage$toForm(
+							_evancz$elm_graphics$Element$show(
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									'score: ',
+									_elm_lang$core$Basics$toString(model.score)))),
 							_user$project$View$playerView(model.player),
 							_user$project$View$pointerView(model.pointer),
 							A2(

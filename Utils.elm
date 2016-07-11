@@ -2,8 +2,10 @@ module Utils exposing (..)
 
 import Mouse exposing (Position)
 import Keyboard exposing (KeyCode)
+import Debug exposing (log)
 
 import Types exposing (..)
+import Model exposing (playerInit)
 
 addKey : Keyboard.KeyCode -> List Keyboard.KeyCode -> List Keyboard.KeyCode
 addKey key keysDown =
@@ -26,23 +28,22 @@ applyChanges model =
       }
     newPointer =
       applyChangesToPointer newModelWithPlayer
+    newModelWithoutCorrections =
+      { newModelWithPlayer
+      | pointer = newPointer
+      }
+
   in
-    { newModelWithPlayer
-    | pointer = newPointer
-    }
+    getCorrectedModel newModelWithoutCorrections
 
 -- POINTER
 
 applyChangesToPointer : Model -> Pointer
 applyChangesToPointer model =
   let
-    player = model.player
     pointer = model.pointer
-    mx = mouseCoords.x
-    my = mouseCoords.y
-    hyp = sqrt <| (toFloat mx)^2 + (toFloat my)^2
     vector =
-      getPointerVector model hyp (mx, my)
+      getPointerVector model
 
     ind =
       (pointer.r /= pointer.defaultR)
@@ -51,31 +52,9 @@ applyChangesToPointer model =
     mouseCoords =
       mounsePositionByPlayer model.player model.mouse.pos
     pointerCoords =
-      let
-        proportion = (toFloat pointer.defaultDistance) / hyp
-        newx = ((toFloat mx) * proportion) + (toFloat player.x)
-        newy = ((toFloat my) * proportion) + (toFloat player.y)
-      in
-        if ind
-          then
-            { x = pointer.x + vector.x
-            , y = pointer.y + vector.y
-            }
-          else
-            if hyp == 0
-              then { x = toFloat mx, y = toFloat (my + pointer.defaultDistance)}
-              else { x = newx, y = newy }
+      getPointerCoords model vector ind
     pointerRadius =
-      case model.mouse.status of
-        Up ->
-          if ind
-            then pointer.r - 0.1
-            else pointer.r
-
-        Down ->
-          if ind
-            then pointer.r - 0.1
-            else pointer.r + 0.1
+      getPointerRadius pointer.r model.mouse.status ind
   in
     { pointer
     | r = pointerRadius
@@ -84,11 +63,50 @@ applyChangesToPointer model =
     , vector = vector
     }
 
-getPointerVector : Model -> Float -> (Int, Int) -> {x : Float, y : Float}
-getPointerVector model hyp (mx, my) =
+getPointerRadius : Float -> MouseStatus -> Bool -> Float
+getPointerRadius r status isIndepenedent =
+  case status of
+    Up ->
+      if isIndepenedent
+        then r - 0.1
+        else r
+
+    Down ->
+      if isIndepenedent
+        then r - 0.1
+        else r + 0.1
+
+getPointerCoords : Model -> {x : Float, y : Float} -> Bool -> {x : Float, y : Float}
+getPointerCoords model vector isIndependent =
   let
-   vectorProportion = 10 / hyp
-   pointer = model.pointer
+    pointer = model.pointer
+    player = model.player
+    { x, y } = mounsePositionByPlayer model.player model.mouse.pos
+    hyp = (getHypothenuse (x, y))
+    proportion = (toFloat pointer.defaultDistance) / hyp
+    newx = ((toFloat x) * proportion) + (toFloat player.x)
+    newy = ((toFloat y) * proportion) + (toFloat player.y)
+  in
+    if isIndependent
+      then
+        { x = pointer.x + vector.x
+        , y = pointer.y + vector.y
+        }
+      else
+        if hyp == 0
+          then { x = toFloat x, y = toFloat (y + pointer.defaultDistance)}
+          else { x = newx, y = newy }
+
+getHypothenuse : (Int, Int) -> Float
+getHypothenuse (mx, my) =
+  sqrt <| (toFloat mx)^2 + (toFloat my)^2
+
+getPointerVector : Model -> {x : Float, y : Float}
+getPointerVector model =
+  let
+    { x, y } = mounsePositionByPlayer model.player model.mouse.pos
+    vectorProportion = 10 / (getHypothenuse (x, y))
+    pointer = model.pointer
   in
     case model.mouse.status of
       Up ->
@@ -96,8 +114,8 @@ getPointerVector model hyp (mx, my) =
           then
           if (pointer.vector.x == 0) && (pointer.vector.y == 0)
             then
-              { x = (toFloat mx) * vectorProportion
-              , y = (toFloat my) * vectorProportion
+              { x = (toFloat x) * vectorProportion
+              , y = (toFloat y) * vectorProportion
               }
             else
               getPointerBorderCollision pointer pointer.vector
@@ -194,3 +212,31 @@ getBorderCollision player (vx, vy) =
     | x = newX
     , y = newY
     }
+
+-- after-applying corrections
+
+getCorrectedModel : Model -> Model
+getCorrectedModel model =
+   let
+    playerDeath = isPlayerDead model
+   in
+    if playerDeath
+      then
+        { model
+        | score = model.score - 1
+        , player = playerInit
+        }
+      else
+        model
+
+isPlayerDead : Model -> Bool
+isPlayerDead model =
+  let
+    player = model.player
+    pointer = model.pointer
+    relX = (round pointer.x) - player.x
+    relY = (round pointer.y) - player.y
+    hyp = getHypothenuse (relX, relY)
+    rSum = (toFloat player.r) + pointer.r
+  in
+    hyp < rSum
