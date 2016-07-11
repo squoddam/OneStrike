@@ -1,10 +1,10 @@
 # OneStrike
 
 ## Main
-One Strike is a game with it's own special mechanics. There can be only two players on one arena. Each player has only one type of gun - energy ball. Player is charging this ball, increasing its size, and releases it in any direction. Ball bounces, decreases over time and once it reached it's minimal state, it immidiately returns to player. This ball kill any player, it touches. In any state and **ANY** player.
+One Strike is a game with it's own special mechanics. There can be only two players on one arena. Each player has only one type of gun - energy ball. Player is charging this ball, increasing its size, and releases it in any direction. Ball bounces, decreases over time and once it reached it's minimal state, it immediately returns to player. This ball kills any player, it touches. In any state and **ANY** player.
 
 ## Plan
-- Development enviroment
+- Development environment
  - NPM
  - Elm
  - Express
@@ -21,4 +21,4 @@ One Strike is a game with it's own special mechanics. There can be only two play
 - Get everything done
 
 ## P.S.
-This is just a little experiment, and quality of code can be really bad. Sorry about that!
+This is just a little experiment, and quality of the code can be really bad. Sorry about that!
