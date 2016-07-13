@@ -4,7 +4,7 @@
   "description": "A small game, written on elm, with websockets, for personal training",
   "main": "index.js",
   "scripts": {
-    "start": "elm-make OneStrike.elm",
+    "start": "elm-make src/OneStrike.elm",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -18,6 +18,8 @@
   },
   "homepage": "https://github.com/squoddam/one-strike#readme",
   "dependencies": {
-    "elm": "^0.17.0"
+    "elm": "^0.17.0",
+    "express": "^4.14.0",
+    "socket.io": "^1.4.8"
   }
 }
